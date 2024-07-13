@@ -49,6 +49,7 @@
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            cursor: pointer;
         }
         .highlight {
             font-weight: bold;
@@ -77,6 +78,41 @@
         .remove-button:hover {
             color: #b71c1c;
         }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgb(0,0,0);
+            background-color: rgba(0,0,0,0.4);
+            padding-top: 60px;
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 500px;
+            border-radius: 8px;
+            text-align: left;
+        }
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -88,7 +124,25 @@
         <button onclick="goBack()">Voltar</button>
     </div>
 
+    <div id="monthModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h2>Detalhes do Mês</h2>
+            <form id="monthDetailsForm">
+                <label for="editMonth">Mês:</label>
+                <input type="text" id="editMonth" readonly><br>
+
+                <label for="editTotalMinutes">Total de Minutos:</label>
+                <input type="number" id="editTotalMinutes" required><br>
+
+                <button type="button" onclick="saveMonthDetails()">Salvar Alterações</button>
+            </form>
+        </div>
+    </div>
+
     <script>
+        let selectedMonthIndex = -1;
+
         function formatTime(value) {
             return value.toString().padStart(2, '0');
         }
@@ -104,6 +158,30 @@
             loadSavedMonths();
         }
 
+        function openModal(index) {
+            selectedMonthIndex = index;
+            const savedMonths = JSON.parse(localStorage.getItem('savedMonths')) || [];
+            const monthData = savedMonths[index];
+            document.getElementById('editMonth').value = monthData.month;
+            document.getElementById('editTotalMinutes').value = monthData.totalMinutes;
+            document.getElementById('monthModal').style.display = "block";
+        }
+
+        function closeModal() {
+            document.getElementById('monthModal').style.display = "none";
+        }
+
+        function saveMonthDetails() {
+            const savedMonths = JSON.parse(localStorage.getItem('savedMonths')) || [];
+            const monthData = savedMonths[selectedMonthIndex];
+            monthData.totalMinutes = parseInt(document.getElementById('editTotalMinutes').value);
+            monthData.averageHours = monthData.totalMinutes / 60;
+
+            localStorage.setItem('savedMonths', JSON.stringify(savedMonths));
+            closeModal();
+            loadSavedMonths();
+        }
+
         function loadSavedMonths() {
             const savedMonths = JSON.parse(localStorage.getItem('savedMonths')) || [];
             const monthsList = document.getElementById('monthsList');
@@ -114,11 +192,11 @@
                 totalMinutes += monthData.totalMinutes;
                 const totalHours = Math.floor(monthData.totalMinutes / 60);
                 const totalMinutesRemainder = monthData.totalMinutes % 60;
-                const averageHours = monthData.averageHours.toFixed(2);
+                const averageHours = (monthData.totalMinutes / 60).toFixed(2);
 
                 const listItem = document.createElement('li');
                 listItem.innerHTML = `
-                    <div>
+                    <div onclick="openModal(${index})">
                         <strong>${monthData.month}</strong><br>
                         <span>Total de Horas: ${formatTime(totalHours)}:${formatTime(totalMinutesRemainder)}</span><br>
                         Média Mensal de Horas: ${averageHours}h
