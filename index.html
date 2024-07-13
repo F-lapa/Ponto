@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contagem de Horas Trabalhadas</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #e0f7fa;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+            width: 400px;
+            text-align: center;
+            overflow-y: auto;
+            max-height: 90vh;
+        }
+        h1, h2 {
+            margin: 0 0 20px;
+            color: #00796b;
+        }
+        form {
+            margin-bottom: 20px;
+        }
+        input, button {
+            margin-bottom: 10px;
+            width: calc(100% - 20px);
+            padding: 10px;
+            border: 1px solid #b2dfdb;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        input {
+            background-color: #e0f2f1;
+            color: #004d40;
+        }
+        input::placeholder {
+            color: #004d40;
+        }
+        button {
+            background-color: #00796b;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #004d40;
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #b2dfdb;
+            border-radius: 4px;
+        }
+        li {
+            background-color: #f1f8e9;
+            margin: 5px 0;
+            padding: 10px;
+            border: 1px solid #c8e6c9;
+            border-radius: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .remove-button {
+            background: none;
+            border: none;
+            color: #d32f2f;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .remove-button:hover {
+            color: #b71c1c;
+        }
+        .clear-button {
+            background-color: #d32f2f;
+            margin-top: 10px;
+        }
+        .clear-button:hover {
+            background-color: #b71c1c;
+        }
+        .highlight {
+            font-size: 24px;
+            font-weight: bold;
+            color: #004d40;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Contagem de Horas Trabalhadas</h1>
+        <form id="workHoursForm">
+            <label for="date">Dia:</label>
+            <input type="date" id="date" required><br>
+            
+            <label for="startTime">Hora de Entrada:</label>
+            <input type="time" id="startTime" required><br>
+            
+            <label for="endTime">Hora de Saída:</label>
+            <input type="time" id="endTime" required><br>
+            
+            <button type="button" onclick="addWorkDay()">Adicionar Dia</button>
+            <button type="button" onclick="saveMonth()">Salvar Mês</button>
+            <button type="button" class="clear-button" onclick="clearMonth()">Limpar Mês</button>
+        </form>
+        
+        <h2>Total de Horas</h2>
+        <div id="totalHours" class="highlight">0:00</div>
+        
+        <h2>Lista de Dias</h2>
+        <ul id="daysList"></ul>
+    </div>
+
+    <script>
+        let totalMinutes = 0;
+        let workDays = JSON.parse(localStorage.getItem('workDays')) || [];
+        let savedMonths = JSON.parse(localStorage.getItem('savedMonths')) || [];
+
+        function addWorkDay() {
+            const date = document.getElementById('date').value;
+            const startTime = document.getElementById('startTime').value;
+            const endTime = document.getElementById('endTime').value;
+
+            if (!date || !startTime || !endTime) {
+                alert('Por favor, preencha todos os campos.');
+                return;
+            }
+
+            const start = new Date(`1970-01-01T${startTime}`);
+            const end = new Date(`1970-01-01T${endTime}`);
+            let workedMinutes = (end - start) / 60000;
+
+            if (workedMinutes < 0) {
+                workedMinutes += 24 * 60; // Adjust for cases where end time is past midnight
+            }
+
+            totalMinutes += workedMinutes;
+
+            const workedHours = Math.floor(workedMinutes / 60);
+            const workedMinutesRemainder = workedMinutes % 60;
+
+            workDays.push({ date, workedHours, workedMinutesRemainder });
+            workDays.sort((a, b) => new Date(b.date) - new Date(a.date)); // Sort by most recent date first
+
+            localStorage.setItem('workDays', JSON.stringify(workDays));
+            localStorage.setItem('totalMinutes', totalMinutes);
+
+            updateWorkDaysList();
+            updateTotalHours();
+        }
+
+        function removeWorkDay(index) {
+            const workedMinutes = workDays[index].workedHours * 60 + workDays[index].workedMinutesRemainder;
+            totalMinutes -= workedMinutes;
+            workDays.splice(index, 1);
+
+            localStorage.setItem('workDays', JSON.stringify(workDays));
+            localStorage.setItem('totalMinutes', totalMinutes);
+
+            updateWorkDaysList();
+            updateTotalHours();
+        }
+
+        function updateWorkDaysList() {
+            const daysList = document.getElementById('daysList');
+            daysList.innerHTML = '';
+            workDays.forEach((day, index) => {
+                const listItem = document.createElement('li');
+                listItem.innerHTML = `
+                    ${day.date}: ${formatTime(day.workedHours)}:${formatTime(day.workedMinutesRemainder)}
+                    <button class="remove-button" onclick="removeWorkDay(${index})">🗑️</button>
+                `;
+                daysList.appendChild(listItem);
+            });
+        }
+
+        function updateTotalHours() {
+            const totalHours = Math.floor(totalMinutes / 60);
+            const totalMinutesRemainder = totalMinutes % 60;
+            document.getElementById('totalHours').textContent = `${formatTime(totalHours)}:${formatTime(totalMinutesRemainder)}`;
+        }
+
+        function formatTime(value) {
+            return value.toString().padStart(2, '0');
+        }
+
+        function saveMonth() {
+            if (workDays.length === 0) {
+                alert('Nenhum dia para salvar.');
+                return;
+            }
+
+            const month = workDays[0].date.slice(0, 7); // Get the year and month from the first date
+            const monthData = {
+                month,
+                totalMinutes,
+                averageHours: totalMinutes / workDays.length / 60
+            };
+
+            savedMonths.push(monthData);
+            workDays = [];
+            totalMinutes = 0;
+
+            localStorage.setItem('workDays', JSON.stringify(workDays));
+            localStorage.setItem('totalMinutes', totalMinutes);
+            localStorage.setItem('savedMonths', JSON.stringify(savedMonths));
+
+            updateWorkDaysList();
+            updateTotalHours();
+            window.location.href = 'months.html';
+        }
+
+        function clearMonth() {
+            workDays = [];
+            totalMinutes = 0;
+
+            localStorage.setItem('workDays', JSON.stringify(workDays));
+            localStorage.setItem('totalMinutes', totalMinutes);
+
+            updateWorkDaysList();
+            updateTotalHours();
+        }
+
+        // Initialize the data from localStorage
+        totalMinutes = JSON.parse(localStorage.getItem('totalMinutes')) || 0;
+        updateWorkDaysList();
+        updateTotalHours();
+    </script>
+</body>
+</html>
