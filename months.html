@@ -113,6 +113,21 @@
             text-decoration: none;
             cursor: pointer;
         }
+        .modal ul {
+            max-height: 300px;
+        }
+        .modal li {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: flex;
+            justify-content: space-between;
+        }
+        .modal input {
+            width: 60px;
+            padding: 5px;
+            margin-left: 10px;
+        }
     </style>
 </head>
 <body>
@@ -132,8 +147,7 @@
                 <label for="editMonth">Mês:</label>
                 <input type="text" id="editMonth" readonly><br>
 
-                <label for="editTotalMinutes">Total de Minutos:</label>
-                <input type="number" id="editTotalMinutes" required><br>
+                <ul id="daysListModal"></ul>
 
                 <button type="button" onclick="saveMonthDetails()">Salvar Alterações</button>
             </form>
@@ -142,6 +156,7 @@
 
     <script>
         let selectedMonthIndex = -1;
+        let selectedMonthDetails = [];
 
         function formatTime(value) {
             return value.toString().padStart(2, '0');
@@ -162,8 +177,19 @@
             selectedMonthIndex = index;
             const savedMonths = JSON.parse(localStorage.getItem('savedMonths')) || [];
             const monthData = savedMonths[index];
+            selectedMonthDetails = monthData.days;
             document.getElementById('editMonth').value = monthData.month;
-            document.getElementById('editTotalMinutes').value = monthData.totalMinutes;
+            const daysListModal = document.getElementById('daysListModal');
+            daysListModal.innerHTML = '';
+            selectedMonthDetails.forEach((day, i) => {
+                const listItem = document.createElement('li');
+                listItem.innerHTML = `
+                    ${day.date}:
+                    <input type="number" value="${day.workedHours}" id="workedHours${i}">:
+                    <input type="number" value="${day.workedMinutesRemainder}" id="workedMinutes${i}">
+                `;
+                daysListModal.appendChild(listItem);
+            });
             document.getElementById('monthModal').style.display = "block";
         }
 
@@ -173,9 +199,14 @@
 
         function saveMonthDetails() {
             const savedMonths = JSON.parse(localStorage.getItem('savedMonths')) || [];
+            selectedMonthDetails.forEach((day, i) => {
+                day.workedHours = parseInt(document.getElementById(`workedHours${i}`).value);
+                day.workedMinutesRemainder = parseInt(document.getElementById(`workedMinutes${i}`).value);
+            });
             const monthData = savedMonths[selectedMonthIndex];
-            monthData.totalMinutes = parseInt(document.getElementById('editTotalMinutes').value);
-            monthData.averageHours = monthData.totalMinutes / 60;
+            monthData.days = selectedMonthDetails;
+            monthData.totalMinutes = selectedMonthDetails.reduce((total, day) => total + (day.workedHours * 60 + day.workedMinutesRemainder), 0);
+            monthData.averageHours = monthData.totalMinutes / selectedMonthDetails.length / 60;
 
             localStorage.setItem('savedMonths', JSON.stringify(savedMonths));
             closeModal();
