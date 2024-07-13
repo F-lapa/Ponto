@@ -195,8 +195,17 @@
             if (!days || days.length === 0) return '';
             const start = formatDate(days[0].date);
             const end = formatDate(days[days.length - 1].date);
+            const startMonth = new Date(days[0].date).getMonth();
+            const endMonth = new Date(days[days.length - 1].date).getMonth();
             const year = new Date(days[0].date).getFullYear();
-            return `${start} a ${end} - ${year}`;
+
+            if (startMonth !== endMonth) {
+                const startYear = new Date(days[0].date).getFullYear();
+                const endYear = new Date(days[days.length - 1].date).getFullYear();
+                return `${start} de ${startYear} a ${end} de ${endYear}`;
+            } else {
+                return `${start} a ${end} - ${year}`;
+            }
         }
 
         function goBack() {
