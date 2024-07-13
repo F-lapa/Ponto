@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meses Salvos</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #e0f7fa;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+            width: 400px;
+            text-align: center;
+            overflow-y: auto;
+            max-height: 90vh;
+        }
+        h1 {
+            margin-bottom: 20px;
+            color: #00796b;
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #b2dfdb;
+            border-radius: 4px;
+        }
+        li {
+            background-color: #f1f8e9;
+            margin: 5px 0;
+            padding: 10px;
+            border: 1px solid #c8e6c9;
+            border-radius: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .highlight {
+            font-weight: bold;
+            color: #004d40;
+        }
+        button {
+            background-color: #00796b;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            margin-top: 20px;
+        }
+        button:hover {
+            background-color: #004d40;
+        }
+        .remove-button {
+            background: none;
+            border: none;
+            color: #d32f2f;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .remove-button:hover {
+            color: #b71c1c;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Meses Salvos</h1>
+        <ul id="monthsList"></ul>
+        <button onclick="goBack()">Voltar</button>
+    </div>
+
+    <script>
+        function formatTime(value) {
+            return value.toString().padStart(2, '0');
+        }
+
+        function goBack() {
+            window.history.back();
+        }
+
+        function removeMonth(index) {
+            const savedMonths = JSON.parse(localStorage.getItem('savedMonths')) || [];
+            savedMonths.splice(index, 1);
+            localStorage.setItem('savedMonths', JSON.stringify(savedMonths));
+            loadSavedMonths();
+        }
+
+        function loadSavedMonths() {
+            const savedMonths = JSON.parse(localStorage.getItem('savedMonths')) || [];
+            const monthsList = document.getElementById('monthsList');
+            monthsList.innerHTML = '';
+            savedMonths.forEach((monthData, index) => {
+                const totalHours = Math.floor(monthData.totalMinutes / 60);
+                const totalMinutesRemainder = monthData.totalMinutes % 60;
+                const averageHours = monthData.averageHours.toFixed(2);
+
+                const listItem = document.createElement('li');
+                listItem.innerHTML = `
+                    <div>
+                        <strong>${monthData.month}</strong><br>
+                        <span class="highlight">Total de Horas: ${formatTime(totalHours)}:${formatTime(totalMinutesRemainder)}</span><br>
+                        Média Mensal de Horas: ${averageHours}h
+                    </div>
+                    <button class="remove-button" onclick="removeMonth(${index})">🗑️</button>
+                `;
+                monthsList.appendChild(listItem);
+            });
+        }
+
+        window.onload = loadSavedMonths;
+    </script>
+</body>
+</html>
