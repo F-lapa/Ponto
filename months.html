@@ -192,7 +192,7 @@
         }
 
         function formatMonthPeriod(days) {
-            if (days.length === 0) return '';
+            if (!days || days.length === 0) return '';
             const start = formatDate(days[0].date);
             const end = formatDate(days[days.length - 1].date);
             const year = new Date(days[0].date).getFullYear();
