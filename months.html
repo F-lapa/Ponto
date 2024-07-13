@@ -185,6 +185,20 @@
             return value.toString().padStart(2, '0');
         }
 
+        function formatDate(dateString) {
+            const options = { day: '2-digit', month: 'short' };
+            const date = new Date(dateString);
+            return date.toLocaleDateString('pt-BR', options).replace('.', '');
+        }
+
+        function formatMonthPeriod(days) {
+            if (days.length === 0) return '';
+            const start = formatDate(days[0].date);
+            const end = formatDate(days[days.length - 1].date);
+            const year = new Date(days[0].date).getFullYear();
+            return `${start} a ${end} - ${year}`;
+        }
+
         function goBack() {
             window.history.back();
         }
@@ -201,7 +215,7 @@
             const savedMonths = JSON.parse(localStorage.getItem('savedMonths')) || [];
             const monthData = savedMonths[index];
             selectedMonthDetails = monthData.days || [];
-            document.getElementById('editMonth').value = monthData.month;
+            document.getElementById('editMonth').value = formatMonthPeriod(selectedMonthDetails);
             const daysListModal = document.getElementById('daysListModal');
             daysListModal.innerHTML = '';
             selectedMonthDetails.forEach((day, i) => {
@@ -247,11 +261,12 @@
                 const totalHours = Math.floor(monthData.totalMinutes / 60);
                 const totalMinutesRemainder = monthData.totalMinutes % 60;
                 const averageHours = (monthData.totalMinutes / 60).toFixed(2);
+                const period = formatMonthPeriod(monthData.days);
 
                 const listItem = document.createElement('li');
                 listItem.innerHTML = `
                     <div onclick="openModal(${index})">
-                        <strong>${monthData.month}</strong><br>
+                        <strong>${period}</strong><br>
                         <span>Total de Horas: ${formatTime(totalHours)}:${formatTime(totalMinutesRemainder)}</span><br>
                         Média Mensal de Horas: ${averageHours}h
                     </div>
