@@ -101,6 +101,19 @@
             color: #004d40;
             margin-top: 10px;
         }
+        .view-months-button {
+            background-color: #00796b;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            margin-top: 20px;
+        }
+        .view-months-button:hover {
+            background-color: #004d40;
+        }
     </style>
 </head>
 <body>
@@ -119,6 +132,7 @@
             <button type="button" onclick="addWorkDay()">Adicionar Dia</button>
             <button type="button" onclick="saveMonth()">Salvar Mês</button>
             <button type="button" class="clear-button" onclick="clearMonth()">Limpar Mês</button>
+            <button type="button" class="view-months-button" onclick="viewMonths()">Ver Meses</button>
         </form>
         
         <h2>Total de Horas</h2>
@@ -237,6 +251,10 @@
 
             updateWorkDaysList();
             updateTotalHours();
+        }
+
+        function viewMonths() {
+            window.location.href = 'months.html';
         }
 
         // Initialize the data from localStorage
