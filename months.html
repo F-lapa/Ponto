@@ -177,7 +177,7 @@
             selectedMonthIndex = index;
             const savedMonths = JSON.parse(localStorage.getItem('savedMonths')) || [];
             const monthData = savedMonths[index];
-            selectedMonthDetails = monthData.days;
+            selectedMonthDetails = monthData.days || [];
             document.getElementById('editMonth').value = monthData.month;
             const daysListModal = document.getElementById('daysListModal');
             daysListModal.innerHTML = '';
